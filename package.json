@@ -1,0 +1,17 @@
+{
+  "name": "nexo",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "db:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "db:down": "docker compose -f infra/docker/docker-compose.yml down"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "turbo": "^2.8.10",
+    "typescript": "^5.9.3"
+  }
+}
