@@ -1,0 +1,24 @@
+.wrapper-no-file {
+    padding: 16px;
+}
+
+.wrapper-editor-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapper-editor-page-header {
+    padding: 8px;
+    border-bottom: 1px solid #555555;
+}
+
+.file-code {
+    opacity: 0.7;
+    margin-left: 12px;
+}
+
+.wrapper-canvas {
+    flex: 1;
+    min-height: 0;
+}

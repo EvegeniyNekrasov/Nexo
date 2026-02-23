@@ -18,3 +18,8 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# test coverage
+coverage
+**/coverage
+.nyc_output

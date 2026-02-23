@@ -7,7 +7,9 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "db:up": "docker compose -f infra/docker/docker-compose.yml up -d",
-    "db:down": "docker compose -f infra/docker/docker-compose.yml down"
+    "db:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "test": "turbo test",
+    "test:cov": "turbo test:cov"
   },
   "license": "MIT",
   "devDependencies": {

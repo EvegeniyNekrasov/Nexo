@@ -1,0 +1,31 @@
+.wrapper-file-page {
+    padding: 16px;
+    max-width: 860px;
+}
+
+.container-create-file {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.container-create-file input {
+    padding: 8px;
+    flex: 1;
+}
+
+.container-create-file button {
+    padding: 8px 12px;
+}
+
+.error {
+    color: crimson;
+}
+
+.wrapper-list {
+    margin-top: 16px;
+}
+
+.list {
+    padding: 6px 0;
+}

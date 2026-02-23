@@ -1,20 +1,6 @@
-import { Route, Routes, Link, useParams } from "react-router-dom";
-import FilesPage from "./pages/FilesPage";
-
-function EditorPage() {
-  const { id } = useParams();
-  return (
-    <div style={{ padding: 16 }}>
-      <h2>Editor (placeholder)</h2>
-      <p>
-        File ID: <code>{id}</code>
-      </p>
-      <p>
-        <Link to="/">← Volver a files</Link>
-      </p>
-    </div>
-  );
-}
+import { Route, Routes } from "react-router-dom";
+import FilesPage from "./pages/FilePage/FilesPage";
+import EditorPage from "./pages/EditorPage";
 
 export default function App() {
   return (
