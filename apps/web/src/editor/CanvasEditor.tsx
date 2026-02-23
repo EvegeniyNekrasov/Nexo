@@ -1,33 +1,99 @@
-import { useEffect, useLayoutEffect, useReducer, useRef } from "react";
-import type { RectShape } from "./types";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import type { RectShape, SceneDocument, Tool } from "./types";
 import { clamp, hitTestRect, normalizeRect, screenToWorld } from "./geometry";
 import { render } from "./render";
-import { saveScene } from "./storage";
+import { getDocument, putDocument } from "./api";
+import { initialState, reducer, type Action } from "./state";
 import ToolButton from "../ui/ToolButton/ToolButton";
+import { saveScene } from "./storage";
 
 import * as helperCanvasEditor from "./helper";
 
 import "./canvasEditor.css";
 
 const CanvasEditor = ({ fileId }: helperCanvasEditor.Props) => {
+  const [loaded, setLoaded] = useState(false);
+
   const [state, dispatch] = useReducer(
-    helperCanvasEditor.reducer,
-    fileId,
-    helperCanvasEditor.initialState,
+    reducer,
+    { shapes: [] } satisfies SceneDocument,
+    initialState,
   );
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const dprRef = useRef<number>(1);
+  const saveTimerRef = useRef<number | null>(null);
+
+  const isMac = navigator.platform.toLowerCase().includes("mac");
+
+  const isUndo = (e: KeyboardEvent) => {
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    return mod && !e.shiftKey && (e.key === "z" || e.key === "Z");
+  };
+
+  const isRedo = (e: KeyboardEvent) => {
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    return (
+      (mod && e.shiftKey && (e.key === "z" || e.key === "Z")) ||
+      (mod && (e.key === "y" || e.key === "Y"))
+    );
+  };
+
+  useEffect(() => {
+    if (!loaded) return;
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+    saveTimerRef.current = window.setTimeout(() => {
+      void putDocument(fileId, state.scene).catch(() => {});
+    }, 500);
+
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    };
+  }, [loaded, fileId, state.scene]);
 
   // Guardar escena al cambiar
   useEffect(() => {
     saveScene(fileId, state.scene);
   }, [fileId, state.scene]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const doc = await getDocument(fileId);
+        if (!cancelled) dispatch({ type: "load-scene", scene: doc });
+      } catch {
+        // fallback: documento vacío
+        if (!cancelled) dispatch({ type: "load-scene", scene: { shapes: [] } });
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [fileId]);
+
   // Atajos: V (select), R (rect), Space (pan modifier)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      if (isUndo(e)) {
+        e.preventDefault();
+        dispatch({ type: "undo" });
+      }
+      if (isRedo(e)) {
+        e.preventDefault();
+        dispatch({ type: "redo" });
+      }
       if (e.code === "Space") {
         dispatch({ type: "space", down: true });
       }
@@ -143,6 +209,7 @@ const CanvasEditor = ({ fileId }: helperCanvasEditor.Props) => {
           startWorldY: p.y,
           startShapeX: hit.x,
           startShapeY: hit.y,
+          before: state.scene,
         },
       });
       return;
@@ -160,6 +227,7 @@ const CanvasEditor = ({ fileId }: helperCanvasEditor.Props) => {
           shapeId: id,
           startWorldX: p.x,
           startWorldY: p.y,
+          before: state.scene,
         },
       });
       return;
@@ -219,6 +287,21 @@ const CanvasEditor = ({ fileId }: helperCanvasEditor.Props) => {
     } catch {
       // ignore
     }
+    const d = state.drag;
+
+    if (d.kind === "moving") {
+      dispatch({ type: "commit-history", before: d.before });
+    }
+
+    if (d.kind === "creating-rect") {
+      // si quedó 0x0, lo borramos y no guardamos history
+      const created = state.scene.shapes.find((s) => s.id === d.shapeId);
+      if (!created || created.w < 1 || created.h < 1) {
+        dispatch({ type: "remove-shape", id: d.shapeId });
+      } else {
+        dispatch({ type: "commit-history", before: d.before });
+      }
+    }
     dispatch({ type: "set-drag", drag: { kind: "none" } });
   };
 
@@ -258,7 +341,7 @@ const CanvasEditor = ({ fileId }: helperCanvasEditor.Props) => {
 
   const resetScene = () => {
     localStorage.removeItem(`nexo:scene:${fileId}`);
-    dispatch({ type: "load-scene", shapes: [] });
+    dispatch({ type: "load-scene", scene: { shapes: [] } });
   };
 
   return (

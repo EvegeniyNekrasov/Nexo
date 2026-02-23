@@ -52,7 +52,7 @@ describe("FilesPage", () => {
 
     await screen.findAllByText("Nexo");
 
-    const button = screen.getAllByText("Crear");
+    const button = screen.getAllByText("Create");
     button.forEach((b) => fireEvent.click(b));
 
     expect(globalThis.fetch).toHaveBeenCalled();

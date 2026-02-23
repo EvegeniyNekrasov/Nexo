@@ -1,25 +1,11 @@
+import type { RectShape, SceneDocument } from "@nexo/shared";
+
 export type Tool = "select" | "rect";
 
 export type Camera = {
-  /** px */
   panX: number;
-  /** px */
   panY: number;
-  /** scale factor */
   zoom: number;
-};
-
-export type RectShape = {
-  id: string;
-  type: "rect";
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-export type Scene = {
-  shapes: RectShape[];
 };
 
 export type Selection = {
@@ -40,6 +26,7 @@ export type DragMode =
       shapeId: string;
       startWorldX: number;
       startWorldY: number;
+      before: SceneDocument;
     }
   | {
       kind: "moving";
@@ -48,15 +35,19 @@ export type DragMode =
       startWorldY: number;
       startShapeX: number;
       startShapeY: number;
+      before: SceneDocument;
     };
 
 export type EditorState = {
   tool: Tool;
   camera: Camera;
-  scene: Scene;
+  scene: SceneDocument;
   selection: Selection;
   drag: DragMode;
   isSpaceDown: boolean;
+  history: { past: SceneDocument[]; future: SceneDocument[] };
 };
 
 export type WorldPoint = { x: number; y: number };
+
+export type { RectShape, SceneDocument };
